@@ -2,10 +2,20 @@ from collections import namedtuple
 from functools import reduce
 SubnetV4 = namedtuple("SubnetV4", ['ipv4', 'netmask'])
 NetMask = namedtuple("NetMask", ["slash", "mask"])
-Ipv4Pool = namedtuple("Ipv4Pool", ["first", "last"])
+# Ipv4Pool = namedtuple("Ipv4Pool", ["first", "last"])
 
 class Transformer:
+    """
+    Take the excel-workbook spreadsheets and transform them into
+    an easy to work with state
 
+        Operations include
+            - filling blanks ( similar to pandas fill down )
+            - turning rows into k,v dictionaries
+            - Wrapping the ipv4 subnet with a named-tuple
+            - Dropping whitespace and extraneous characters
+            - Grouping data by its logical domain i.e
+    """
     def __init__(self, data: list):
         self.xlsx_data = data
         self.grouped = {}
@@ -39,7 +49,9 @@ class Transformer:
 
 
     def get_sheets_grouped_by_area(self):
-        return [self.__sheet_grouped_by_area(work_sheet) for work_sheet in self.xlsx_data]
+        if(len(self.grouped) == 0):
+            self.grouped = [self.__sheet_grouped_by_area(work_sheet) for work_sheet in self.xlsx_data]
+        return self.grouped
 
     def __sheet_grouped_by_area(self, sheet):
         # unique_groups = set([sheet[row_key]["AREA"] for row_key in sheet[1:]])

@@ -2,7 +2,7 @@
 SUBNET = """
 # {area} - {func}
 subnet {ipv4} netmask {netmask} {{
-    option routers {gw};\
+    option routers {gw};
     {pool}
 }}"""
 
