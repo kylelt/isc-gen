@@ -21,9 +21,9 @@ def main(argumentVector:list):
             print("ARGV[{}]: {}".format(idx, val))
 
     transformer = Transformer(DataReader(app_props["in_file"]).get_data())
-    writer = DataWriter(transformer.get_sheets_grouped_by_area())
+    writer = DataWriter(transformer.get_sheets_grouped_by_area(), outfiles_name_prefix="subnets-", outfiles_path=(app_props["out_file_dir"] if app_props["out_file_dir"] else "%USERPROFILE/Documents"))
     writer.generate_files()
-    writer.get_files()
+    writer.write_files()
 
 if __name__ == "__main__":
     main(sys.argv)

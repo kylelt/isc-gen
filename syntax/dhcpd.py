@@ -9,5 +9,6 @@ subnet {ipv4} netmask {netmask} {{
 POOL = """
 pool {{
    range {range};
+   failover peer "unknown";
 }}
 """
