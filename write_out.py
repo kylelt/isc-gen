@@ -1,5 +1,5 @@
 # Write out to dhcpd.conf subnet format
-from syntax.dhcpd import SUBNET, POOL
+from syntax.dhcpd import SUBNET, gen_pool
 from functools import reduce
 from os import environ
 from os.path import join
@@ -14,7 +14,7 @@ def generate_syntax_for_subnet(subnet: dict):
         ipv4=ipv4_str,
         netmask=net_str,
         gw=subnet["GATEWAY"],
-        pool=POOL.format(range=subnet["HOST RANGE"]).replace("\n", "\n\t"),
+        pool=gen_pool(subnet).replace("\n", "\n\t"),
         area=subnet["AREA"],
         func=subnet["FUNCTION"]
     ) + "\n"

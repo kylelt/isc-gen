@@ -1,8 +1,33 @@
 from collections import namedtuple
 from functools import reduce
+
 SubnetV4 = namedtuple("SubnetV4", ['ipv4', 'netmask'])
 NetMask = namedtuple("NetMask", ["slash", "mask"])
-# Ipv4Pool = namedtuple("Ipv4Pool", ["first", "last"])
+
+def build_subnet_tuple(subnet_serialised_with_slash=None, subnet_serialised_with_netmask=None):
+    if None == subnet_serialised_with_slash and None == subnet_serialised_with_netmask:
+        raise ValueError("Expecting at least one netmask notation")
+
+    if subnet_serialised_with_slash:
+        ipv4, suffix = subnet_serialised_with_slash.split('/')
+
+        netmask = '.'.join(["255" for i in range(int(int(suffix) / 8))]) \
+                  + ('' if (int(suffix) / 8 == 4) else '.' + str(255 - (pow(2, 8 - int(suffix) % 8) - 1)))
+        # if we haven't built a full netmask complete with .0's as necessay
+        netmask = reduce(lambda x, y: x + '.0', range(3 - netmask.count('.')), netmask)
+        return SubnetV4._make((ipv4, NetMask._make((suffix, netmask))))
+
+    if subnet_serialised_with_netmask:
+        raise NotImplementedError("We don't support from nm to slash yet, fork me and fix it")
+
+def sheet_grouped_by_area(sheet):
+    # unique_groups = set([sheet[row_key]["AREA"] for row_key in sheet[1:]])
+    unique_groups = set([x["AREA"] for x in sheet])
+
+    data = { area_name: [sheet_row for sheet_row in sheet if sheet_row["AREA"] == area_name]
+        for area_name in unique_groups
+             }
+    return data
 
 class Transformer:
     """
@@ -34,7 +59,6 @@ class Transformer:
 
             self.xlsx_data[sheet] = self.__amend_data(self.xlsx_data[sheet])
 
-
     def __amend_data(self, sheet:list):
         """ Grouped rows in a column give value for the first column and null for the rest  c1 X crest"""
         sentinel = ""
@@ -42,39 +66,20 @@ class Transformer:
 
         for idx, vals in enumerate(dictorized):
             vals["HOST RANGE"] = vals["HOST RANGE"].replace(" - ", " ")
-            vals["SUBNET"] = self.__build_subnet_tuple(subnet_serialised_with_slash=vals["SUBNET"])
+            vals["SUBNET"] = build_subnet_tuple(subnet_serialised_with_slash=vals["SUBNET"])
 
         [print(x) for x in dictorized]
         return dictorized
 
-
     def get_sheets_grouped_by_area(self):
+        """
+        Groups the data by area , if it has already been grouped just return that
+        """
         if(len(self.grouped) == 0):
-            self.grouped = [self.__sheet_grouped_by_area(work_sheet) for work_sheet in self.xlsx_data]
+            self.grouped = [sheet_grouped_by_area(self.xlsx_data[work_sheet]) for work_sheet in self.xlsx_data]
         return self.grouped
 
-    def __sheet_grouped_by_area(self, sheet):
-        # unique_groups = set([sheet[row_key]["AREA"] for row_key in sheet[1:]])
-        unique_groups = set([x["AREA"] for x in self.xlsx_data[sheet]])
-
-        data = { area_name: [sheet_row for sheet_row in self.xlsx_data[sheet] if sheet_row["AREA"] == area_name]
-            for area_name in unique_groups
-                 }
-        return data
 
 
-    def __build_subnet_tuple(self, subnet_serialised_with_slash=None, subnet_serialised_with_netmask=None):
-        if None == subnet_serialised_with_slash and None == subnet_serialised_with_netmask:
-            raise ValueError("Expecting at least one netmask notation")
 
-        if subnet_serialised_with_slash:
-            ipv4, suffix = subnet_serialised_with_slash.split('/')
-            # Convert the slash to 255.255.255.255 notation
-            netmask = '.'.join(["255" for i in range(int(int(suffix)/8))])\
-                      + ('' if (int(suffix) / 8 == 4) else '.' + str(255 - (pow(2, 8 - int(suffix) % 8)-1)))
-            # if we haven't built a full netmask complete with .0's as necessay
-            netmask = reduce(lambda x, y: x + '.0', range(3-netmask.count('.')), netmask)
-            return SubnetV4._make((ipv4, NetMask._make((suffix, netmask))))
 
-        if subnet_serialised_with_netmask:
-            raise NotImplementedError("We don't support from nm to slash yet, fork me and fix it")
