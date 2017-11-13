@@ -1,4 +1,3 @@
-
 def file_namify(human_friendly_name: str):
     """
 

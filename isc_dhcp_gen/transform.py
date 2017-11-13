@@ -25,8 +25,7 @@ def sheet_grouped_by_area(sheet):
     unique_groups = set([x["AREA"] for x in sheet])
 
     data = { area_name: [sheet_row for sheet_row in sheet if sheet_row["AREA"] == area_name]
-        for area_name in unique_groups
-             }
+        for area_name in unique_groups }
     return data
 
 class Transformer:
@@ -46,7 +45,6 @@ class Transformer:
         self.grouped = {}
         self.__parse_sheets()
 
-
     def __parse_sheets(self):
         for sheet in self.xlsx_data:
 
@@ -60,16 +58,17 @@ class Transformer:
             self.xlsx_data[sheet] = self.__amend_data(self.xlsx_data[sheet])
 
     def __amend_data(self, sheet:list):
-        """ Grouped rows in a column give value for the first column and null for the rest  c1 X crest"""
+        """
+        Grouped rows in a column give value for the first column and null for the rest  c1 X crest
+        """
         sentinel = ""
-        dictorized = [{sheet[0][i]: row[i] for i in range(len(row)-1)} for row in sheet[1:]]
+        sheet_data_dictorized = [{sheet[0][i]: row[i] for i in range(len(row)-1)} for row in sheet[1:]]
+        for idx, values in enumerate(sheet_data_dictorized):
+            values["HOST RANGE"] = values["HOST RANGE"].replace(" - ", " ")
+            values["SUBNET"] = build_subnet_tuple(subnet_serialised_with_slash=values["SUBNET"])
 
-        for idx, vals in enumerate(dictorized):
-            vals["HOST RANGE"] = vals["HOST RANGE"].replace(" - ", " ")
-            vals["SUBNET"] = build_subnet_tuple(subnet_serialised_with_slash=vals["SUBNET"])
-
-        [print(x) for x in dictorized]
-        return dictorized
+        # [print(x) for x in sheet_data_dictorized]
+        return sheet_data_dictorized
 
     def get_sheets_grouped_by_area(self):
         """

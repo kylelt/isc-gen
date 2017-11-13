@@ -1,13 +1,13 @@
 import sys
-from read_in import DataReader
-from transform import Transformer
-from write_out import DataWriter
+from isc_dhcp_gen.read_in import DataReader
+from isc_dhcp_gen.transform import Transformer
+from isc_dhcp_gen.write_out import DataWriter
+
 app_props = {
     "in_file": None,
     "out_file_dir": None,
     "debug": True
 }
-
 
 def main(argumentVector:list):
     argv_len = len(argumentVector)

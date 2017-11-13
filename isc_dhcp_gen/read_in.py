@@ -1,8 +1,4 @@
 # handle the vlsm data sheet as our DSL
-#import re
-from functools import reduce
-from typing import IO
-import json
 from pyexcel_xlsx import get_data
 
 class DataReader:
