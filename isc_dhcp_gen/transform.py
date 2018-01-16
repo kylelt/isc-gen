@@ -16,9 +16,9 @@ def build_subnet_tuple(subnet_serialised_with_slash=None, subnet_serialised_with
         # if we haven't built a full netmask complete with .0's as necessay
         netmask = reduce(lambda x, y: x + '.0', range(3 - netmask.count('.')), netmask)
         return SubnetV4._make((ipv4, NetMask._make((suffix, netmask))))
-
-    if subnet_serialised_with_netmask:
-        raise NotImplementedError("We don't support from nm to slash yet, fork me and fix it")
+                                                                                 # __ fixed ___
+    if subnet_serialised_with_netmask:                                         #  /
+        raise NotImplementedError("We don't support from nm to slash yet, fork ==/__ me and fix it")
 
 def sheet_grouped_by_area(sheet):
     # unique_groups = set([sheet[row_key]["AREA"] for row_key in sheet[1:]])
@@ -27,6 +27,7 @@ def sheet_grouped_by_area(sheet):
     data = { area_name: [sheet_row for sheet_row in sheet if sheet_row["AREA"] == area_name]
         for area_name in unique_groups }
     return data
+
 
 class Transformer:
     """
@@ -68,8 +69,11 @@ class Transformer:
             values["SUBNET"] = build_subnet_tuple(subnet_serialised_with_slash=values["SUBNET"])
 
         # [print(x) for x in sheet_data_dictorized]
+        # Drops out /32's they are special cases ( for now )
+        sheet_data_dictorized = list(filter(lambda x: 'SUBNET' in x and x['SUBNET'].netmask.mask != '255.255.255.255', sheet_data_dictorized))
         return sheet_data_dictorized
 
+    @property
     def get_sheets_grouped_by_area(self):
         """
         Groups the data by area , if it has already been grouped just return that

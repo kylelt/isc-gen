@@ -20,11 +20,15 @@ POOL = """\tpool {{
 \t{unknown}
 }}"""
 UNKNOWN_CLIENTS ="{deny} unknown-clients;"
-
+HOST = """HOST {{
+    hardware address {mac};
+}}"""
+GROUP = """
+"""
 INCLUDE = """include "{absprefix}/{fname}";
 """
 # --------------------
-FAILOVER = """failover peer "{relationship_name};" """
+FAILOVER = """failover peer "{relationship_name}"; """
 
 gen_pool = lambda x: \
     just_pool(x) \
@@ -32,7 +36,7 @@ gen_pool = lambda x: \
     else pool_w_failover(x)
 
 
-# I am writing range=x[HOST RANGE] more than once i should internalise the optional to just_pool somehow
+# we are writing range=x[HOST RANGE] more than once we should internalise the optional to just_pool somehow
 unknown_clients = lambda x: "" \
     if "ALLOW UNKNOWN HOSTS" not in x\
     or x["ALLOW UNKNOWN HOSTS"] is None\
