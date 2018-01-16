@@ -4,6 +4,7 @@ from functools import reduce
 SubnetV4 = namedtuple("SubnetV4", ['ipv4', 'netmask'])
 NetMask = namedtuple("NetMask", ["slash", "mask"])
 
+
 def build_subnet_tuple(subnet_serialised_with_slash=None, subnet_serialised_with_netmask=None):
     if None == subnet_serialised_with_slash and None == subnet_serialised_with_netmask:
         raise ValueError("Expecting at least one netmask notation")
@@ -13,15 +14,28 @@ def build_subnet_tuple(subnet_serialised_with_slash=None, subnet_serialised_with
 
         netmask = '.'.join(["255" for i in range(int(int(suffix) / 8))]) \
                   + ('' if (int(suffix) / 8 == 4) else '.' + str(255 - (pow(2, 8 - int(suffix) % 8) - 1)))
+
         # if we haven't built a full netmask complete with .0's as necessay
         netmask = reduce(lambda x, y: x + '.0', range(3 - netmask.count('.')), netmask)
         return SubnetV4._make((ipv4, NetMask._make((suffix, netmask))))
-                                                                                 # __ fixed ___
-    if subnet_serialised_with_netmask:                                         #  /
+
+    if subnet_serialised_with_netmask:
+        # I have no use case for this, but seems like obvious behaviour
         raise NotImplementedError("We don't support from nm to slash yet, fork ==/__ me and fix it")
 
+
 def sheet_grouped_by_area(sheet):
-    # unique_groups = set([sheet[row_key]["AREA"] for row_key in sheet[1:]])
+    """
+    Logically separates the subnets by the AREA data column, i.e OFFICE1, OFFICE2 and so on
+
+    :param sheet: the
+    :return:
+
+    Because the tangible is more tangible the generated files will separated by the logical area or site
+    that the subnets contained concerned. This functionality could be more generic and refactored to be
+    an independent module that logically separates the subnets in different ways.
+
+    """
     unique_groups = set([x["AREA"] for x in sheet])
 
     data = { area_name: [sheet_row for sheet_row in sheet if sheet_row["AREA"] == area_name]
@@ -39,17 +53,23 @@ class Transformer:
             - turning rows into k,v dictionaries
             - Wrapping the ipv4 subnet with a named-tuple
             - Dropping whitespace and extraneous characters
-            - Grouping data by its logical domain i.e
+            - Grouping data by its logical domain see, sheets_grouped_by_area(sheet)
     """
     def __init__(self, data: list):
         self.xlsx_data = data
         self.grouped = {}
+        # read the sheets
         self.__parse_sheets()
 
     def __parse_sheets(self):
+        """
+        Replace the sheet data ( OrderedDict{"Key":list[list]} ) with data that is more
+        readily usable, modifies class state.
+        :return: None
+        """
         for sheet in self.xlsx_data:
 
-            # fill down
+            # fill down - attempts to refactor this to an independent have broken the parse
             for idx, row in enumerate(self.xlsx_data[sheet]):
                 if row[0] is None:
                     row[0] = self.xlsx_data[sheet][idx-1][0]
@@ -60,7 +80,7 @@ class Transformer:
 
     def __amend_data(self, sheet:list):
         """
-        Grouped rows in a column give value for the first column and null for the rest  c1 X crest
+            Cleans the data of human semantics, converts from w * h list to w * ( h - 1 ) list of tuples, applies header row as keys
         """
         sentinel = ""
         sheet_data_dictorized = [{sheet[0][i]: row[i] for i in range(len(row)-1)} for row in sheet[1:]]
